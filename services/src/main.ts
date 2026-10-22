@@ -25,7 +25,13 @@ if (env.ORACLE_ENABLED === "true") {
   stopOracle = new OracleService(db, pub, env, d).start((e) => app.log.error({ err: e }, "oracle tick failed"));
 }
 
-await app.listen({ port: env.API_PORT, host: "0.0.0.0" });
+// Dual-stack ("::") so both http://localhost and http://127.0.0.1 reach this server; fall back to IPv4-only if IPv6 is off.
+try {
+  await app.listen({ port: env.API_PORT, host: "::" });
+} catch (e) {
+  if ((e as { code?: string }).code === "EADDRINUSE") throw e;
+  await app.listen({ port: env.API_PORT, host: "0.0.0.0" });
+}
 
 const shutdown = async () => {
   stopIndexer();
