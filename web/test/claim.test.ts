@@ -56,6 +56,12 @@ describe("claim page", () => {
     expect(r.querySelector("#out .err")!.textContent).toMatch(/not enrolled in any participating NGO group/);
   });
 
+  it("says the server is still syncing, instead of 'not enrolled', when the index is far behind the chain", async () => {
+    const card = "FF1-" + new Identity().export();
+    const r = await run(card, { "/api/events": [openEvent("1", future)], "/api/groups": [], "/api/health": { head: "1000000", indexedUpTo: 900000 } });
+    expect(r.querySelector("#out .err")!.textContent).toMatch(/still syncing chain history/);
+  });
+
   it("shows vouchers saved on this device with a working QR button and never shows secrets in plain text", async () => {
     localStorage.setItem("ff.vouchers", JSON.stringify([{ voucher: { secret: "0x" + "ee".repeat(32), voucherId: "1", eventId: "7", amount: "100000000", expiry: future }, signature: "0x12" }]));
     stubFetch({ "/api/events": [] });

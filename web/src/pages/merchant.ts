@@ -53,7 +53,7 @@ export function merchant(root: HTMLElement, cfg: AppConfig | null): () => void {
     if (!usable) { res.innerHTML = msg("err", "No saved settings; go online once to enable offline checks."); return; }
     const raw = $<HTMLTextAreaElement>(root, "#v").value.trim();
     if (!raw) { res.innerHTML = msg("err", "Paste the voucher text (or scan its QR code) first."); return; }
-    if (raw.startsWith("FF1-")) { res.innerHTML = msg("err", "That is a household card, not a voucher. Use the Claim page with the card to get a voucher, then paste the voucher here."); return; }
+    if (raw.startsWith("FF1-")) { res.innerHTML = msg("err", "That is a household card (it stays secret and is never shown to a shop). Open the Claim page, claim with this card, then use \"Copy voucher text\" and paste that voucher here."); return; }
     const r = await verifyVoucherOffline(raw, usable);
     if (!r.ok) { res.innerHTML = msg("err", `Do NOT accept: ${r.reason}.`); return; }
     if (queue.get().some((i) => i.voucher.voucherId === r.voucher.voucherId)) { res.innerHTML = msg("err", "This voucher was already accepted on this device."); return; }

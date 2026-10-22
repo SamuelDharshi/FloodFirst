@@ -95,7 +95,7 @@ describe("merchant page", () => {
   it("explains when a household card is pasted instead of a voucher, and when nothing is pasted", async () => {
     const { q } = setup();
     await accept(q, "FF1-YDoggNn5wlqvNEl8XVivnudPg5Od1p0EB6m4Cot+8T4=");
-    expect(q("#res").textContent).toMatch(/household card, not a voucher/);
+    expect(q("#res").textContent).toMatch(/that is a household card/i);
     await accept(q, "");
     expect(q("#res").textContent).toMatch(/Paste the voucher text/);
     expect(localStorage.getItem("ff.merchant.queue")).toBeNull();

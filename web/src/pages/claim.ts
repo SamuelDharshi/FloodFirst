@@ -89,7 +89,13 @@ export function claim(root: HTMLElement, cfg: AppConfig | null): void {
         const members = r.members.map((m) => BigInt(m));
         if (members.includes(identity.commitment)) { found = { groupId: g.groupId, members }; break; }
       }
-      if (!found) throw new Error("This card is not enrolled in any participating NGO group.");
+      if (!found) {
+        // A server that is still re-reading chain history cannot know every group yet; say so instead of a false "not enrolled".
+        const h = await getJson<{ head?: string; indexedUpTo?: number | null }>("/api/health").catch(() => null);
+        const behind = h?.head && h.indexedUpTo != null ? Number(h.head) - h.indexedUpTo : 0;
+        if (behind > 400) throw new Error(`The server is still syncing chain history (${behind.toLocaleString()} blocks behind), so it cannot see every NGO group yet. Wait a few minutes and try again. Your card is not rejected.`);
+        throw new Error("This card is not enrolled in any participating NGO group. Ask the field agent to enrol it (Field agent page), then try again.");
+      }
 
       const group = new Group(found.members);
       const onChainRoot = await publicClient(c).readContract({ address: c.deployment.semaphore, abi: semaphoreAbi, functionName: "getMerkleTreeRoot", args: [BigInt(found.groupId)] });
