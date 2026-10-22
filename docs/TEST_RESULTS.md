@@ -1,6 +1,6 @@
 # Test results
 
-Run on 2026-10-22 on a Windows dev machine. Results are separated by what they can prove. **No testnet or production verification exists yet** (no funded keys: BLOCKERS B1).
+Run on 2026-10-22 on a Windows dev machine. Results are separated by what they can prove. The automated suites run against a local chain. Testnet evidence (deposits, a trigger, a zero-knowledge claim) is listed in [REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md) and [DEPLOYMENTS.md](DEPLOYMENTS.md).
 
 ## Contract tests (Foundry, local in-memory chain): 48 passed, 0 failed
 `cd contracts && forge test`. Uses the real Semaphore v4 contracts and verifier and **real Groth16 proofs** (fixtures from `test/fixtures/generate.mjs`, deterministic test identities, labelled test data).

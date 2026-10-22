@@ -1,6 +1,6 @@
 # Deployment runbook (testnet)
 
-Nothing has been deployed yet: it needs your funded testnet keys ([BLOCKERS B1](BLOCKERS.md)). The commands below are the exact path; each step verifies the previous one.
+The contracts are deployed on Base Sepolia (addresses in [DEPLOYMENTS.md](DEPLOYMENTS.md)). The commands below are the exact path to repeat the deployment with your own funded testnet keys; each step verifies the previous one.
 
 ## 0. Prerequisites
 Node 22.13+, Foundry (`forge`, `cast`, `anvil`), a Base Sepolia faucet for ETH.
