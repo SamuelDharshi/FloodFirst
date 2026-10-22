@@ -1,7 +1,7 @@
 import { Identity } from "@semaphore-protocol/identity";
 import QRCode from "qrcode";
 import { decodeEventLog } from "viem";
-import { getJson, type AppConfig } from "../api";
+import { getJson, postJson, type AppConfig } from "../api";
 import { semaphoreAbi } from "../abis";
 import { txBox } from "../txbox";
 import { $, esc, msg, store } from "../util";
@@ -31,17 +31,25 @@ export function agent(root: HTMLElement, cfg: AppConfig | null): void {
   async function showReg() {
     const g = myGroup.get();
     const box = $(root, "#reg");
+    mk.disabled = !!g; // one group per NGO: pressing Create again would only make another empty group
+    mk.textContent = g ? "Group created" : "Create my NGO group";
     if (!g) { box.innerHTML = ""; return; }
     try {
       const list = await getJson<{ groupId: string }[]>("/api/groups");
-      const ok = list.some((x) => x.groupId === g);
-      box.innerHTML = ok ? msg("ok", "This group is admitted to the shared registry.")
-        : msg("info", `Not yet admitted to the registry. The registry owner must run: npm run cli -- register-group ${g} ${wallet.address ?? "<your address>"}`);
+      if (list.some((x) => x.groupId === g)) { box.innerHTML = msg("ok", "This group is admitted to the shared registry."); return; }
+      box.innerHTML = msg("info", "Admitting your group to the registry…");
+      const r = await postJson<{ status?: string; txHash?: string; error?: string }>("/api/groups/admit", { groupId: g }).catch(() => null);
+      if (r && r.status === 200 && (r.data.status === "admitted" || r.data.status === "already-admitted")) {
+        box.innerHTML = msg("ok", r.data.txHash ? `Group admitted to the shared registry automatically (tx ${r.data.txHash}).` : "This group is admitted to the shared registry.");
+      } else {
+        box.innerHTML = msg("info", `Not yet admitted to the registry (automatic admission is off on this server). The registry owner must run: npm run cli -- register-group ${g} ${wallet.address ?? "<your address>"}`);
+      }
     } catch (e) { box.innerHTML = msg("err", `Registry status unavailable: ${(e as Error).message}`); }
   }
   void showReg();
 
   mk.onclick = async () => {
+    if (myGroup.get()) return;
     mk.disabled = true;
     try {
       await runTx(c,
@@ -55,7 +63,7 @@ export function agent(root: HTMLElement, cfg: AppConfig | null): void {
           myGroup.set(gid.toString());
           gidEl.textContent = gid.toString();
         }, mkTx);
-    } finally { mk.disabled = false; void showReg(); }
+    } finally { void showReg(); }
   };
 
   $<HTMLButtonElement>(root, "#gen").onclick = async () => {

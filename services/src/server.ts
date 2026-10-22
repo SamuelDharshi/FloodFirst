@@ -13,7 +13,7 @@ import {
   type PublicClient,
 } from "viem";
 import { z } from "zod";
-import { issuerAbi, oracleAbi, poolAbi, registryAbi, tokenAbi, VOUCHER_TYPES } from "./abi.js";
+import { issuerAbi, oracleAbi, poolAbi, registryAbi, semaphoreAbi, tokenAbi, VOUCHER_TYPES } from "./abi.js";
 import { json, makeWallet } from "./chain.js";
 import type { Deployment, Env } from "./config.js";
 import { all, get, run, type Db } from "./db.js";
@@ -102,6 +102,8 @@ export async function buildServer(ctx: ServerCtx): Promise<FastifyInstance> {
   const relayer = env.RELAYER_PRIVATE_KEY ? makeWallet(env, env.RELAYER_PRIVATE_KEY) : null;
   const signer = env.VOUCHER_SIGNER_PRIVATE_KEY ? makeWallet(env, env.VOUCHER_SIGNER_PRIVATE_KEY) : null;
   const inflight = new Set<string>();
+  // Testnet convenience: the registry owner key admits NGO groups on request (see POST /api/groups/admit).
+  const registrar = env.AUTO_ADMIT_NGO_GROUPS === "true" && env.DEPLOYER_PRIVATE_KEY ? makeWallet(env, env.DEPLOYER_PRIVATE_KEY) : null;
 
   const admin = (req: { headers: Record<string, unknown> }): boolean =>
     !!env.ADMIN_API_TOKEN && req.headers.authorization === `Bearer ${env.ADMIN_API_TOKEN}`;
@@ -193,6 +195,35 @@ export async function buildServer(ctx: ServerCtx): Promise<FastifyInstance> {
     });
     void reply;
     return { groupId: id, members: rows.map((r) => r.commitment), indexedUpTo: Number(get(db, "SELECT value FROM meta WHERE key = 'cursor'")?.value ?? -1) };
+  });
+
+  // ---------- NGO group admission ----------
+  // Only the registry owner may admit a group. When AUTO_ADMIT_NGO_GROUPS=true the server does it on request, so an NGO does not
+  // have to wait for an operator. The NGO address is read from the chain (the group's admin), never taken from the request.
+  // This is a testnet convenience: on mainnet admission must stay a governed, human decision.
+  app.post("/api/groups/admit", { config: { rateLimit: { max: 6, timeWindow: "1 minute" } } }, async (req, reply) => {
+    const body = z.object({ groupId: z.string().regex(/^\d{1,18}$/) }).parse(req.body);
+    const groupId = BigInt(body.groupId);
+    const registered = (await pub.readContract({ address: d.registry, abi: registryAbi, functionName: "isNgoGroup", args: [groupId] }).catch(() => null)) as boolean | null;
+    if (registered === true) return { status: "already-admitted", groupId: body.groupId };
+    if (!registrar) return reply.code(503).send({ error: "automatic admission is off on this server; the registry owner must admit the group" });
+    let ngo: Hex;
+    try {
+      ngo = (await pub.readContract({ address: d.semaphore, abi: semaphoreAbi, functionName: "getGroupAdmin", args: [groupId] })) as Hex;
+    } catch {
+      return reply.code(404).send({ error: "no such Semaphore group on chain" });
+    }
+    if (/^0x0+$/.test(ngo)) return reply.code(404).send({ error: "no such Semaphore group on chain" });
+    try {
+      const { request } = await pub.simulateContract({ account: registrar.account, address: d.registry, abi: registryAbi, functionName: "registerNgoGroup", args: [groupId, ngo] });
+      const hash = await registrar.client.writeContract(request);
+      const receipt = await pub.waitForTransactionReceipt({ hash });
+      if (receipt.status !== "success") return reply.code(502).send({ error: "admission transaction reverted", txHash: hash });
+      return { status: "admitted", groupId: body.groupId, ngo, txHash: hash };
+    } catch (e) {
+      const name = revertName(e);
+      return reply.code(name ? 422 : 502).send({ error: name ?? "admission failed" });
+    }
   });
 
   // ---------- relayer: claim ----------

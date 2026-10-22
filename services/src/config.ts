@@ -25,6 +25,7 @@ const schema = z.object({
   GAUGE_JSON_PATH: z.string().default(""),
   GAUGE_SCALE: z.coerce.number().positive().default(1),
   GAUGE_OUTAGE_WINDOW_SEC: z.coerce.number().int().positive().default(6 * 3600),
+  AUTO_ADMIT_NGO_GROUPS: z.enum(["true", "false"]).default("false"),
   ORACLE_ENABLED: z.enum(["true", "false"]).default("false"),
   ORACLE_INTERVAL_SEC: z.coerce.number().int().positive().default(900),
   ORACLE_FORECAST_HORIZON_DAYS: z.coerce.number().int().min(1).max(30).default(3),

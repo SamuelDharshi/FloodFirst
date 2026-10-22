@@ -25,7 +25,7 @@ npm run verify-deployment    # reads the chain: bytecode + all cross-contract wi
 ## 4. Seed the system (all real transactions)
 1. Mint testnet tokens to donors: `npm run cli -- mint <donor> 1000`
 2. An NGO connects its wallet on the web **Field agent** page, creates its group, enrolls households.
-3. Admit the group: `npm run cli -- register-group <groupId> <ngoAddress>`
+3. Admit the group: automatic when `AUTO_ADMIT_NGO_GROUPS=true` (testnet only; the server then needs the registry owner key), otherwise `npm run cli -- register-group <groupId> <ngoAddress>`
 4. Donors approve + deposit on the **Donate** page.
 
 ## 5. Run the services
@@ -66,5 +66,5 @@ See [OPERATIONS.md](OPERATIONS.md). Contracts are not upgradeable: a bad deploym
 **Free-tier limits you must know:**
 - The service **sleeps after about 15 minutes without traffic**; the first request afterwards takes about a minute to wake it.
 - The free plan has **no persistent disk**. SQLite lives in `/tmp`, so on every restart the event index is **rebuilt from the chain** (a few minutes of `eth_getLogs` calls; nothing is lost on chain), but the **public oracle log, operator gauge readings and idempotency records are lost**. A paid instance with a disk (or a hosted database) removes this.
-- Keep the **owner key off the server**; run admin commands (`register-group`, `set-thresholds`, `mint`) from your own machine with `npm run cli`.
+- Keep the **owner key off the server** on any network that matters (the testnet-only `AUTO_ADMIT_NGO_GROUPS` option is the deliberate exception); run admin commands (`register-group`, `set-thresholds`, `mint`) from your own machine with `npm run cli`.
 

@@ -319,7 +319,7 @@ The same flow in plain ASCII:
 
 1. Open **Field agent** and connect the NGO wallet.
 2. Click **Create my NGO group**. Confirm. The page shows your **group id**.
-3. Ask the operator to admit it: `npm run cli -- register-group <groupId> <NGO wallet address>` (the page shows this exact command).
+3. The page admits the group for you when the server runs with `AUTO_ADMIT_NGO_GROUPS=true` (testnet convenience; the NGO address is read from the chain). Otherwise the operator admits it: `npm run cli -- register-group <groupId> <NGO wallet address>` (the page shows this exact command). Create the group once; the button is disabled afterwards.
 4. Click **Generate household secret on this device**. A card appears: the code `FF1-…` and a QR. **This secret is shown once and never stored.** Print it or hand it to the household.
 5. Click **Add this household to my group** and confirm. The page waits for the on-chain result, then confirms the commitment is a member.
 

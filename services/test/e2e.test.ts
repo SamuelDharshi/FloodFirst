@@ -115,6 +115,8 @@ beforeAll(async () => {
     BASIN_LON: "91.7",
     GAUGE_MODE: "operator",
     ADMIN_API_TOKEN: "test-admin-token-test-admin-token",
+    DEPLOYER_PRIVATE_KEY: KEYS.deployer,
+    AUTO_ADMIT_NGO_GROUPS: "true",
     CONFIRMATIONS: "0",
     DATABASE_PATH: resolve(TMP, "e2e.sqlite"),
     DEPLOYMENTS_FILE: resolve(TMP, "deployments/31337.json"),
@@ -302,5 +304,20 @@ describe("FloodFirst end-to-end (local anvil)", () => {
     expect((await app.inject({ method: "POST", url: "/admin/sms", payload: { to: "+15555550100", body: "x" } })).statusCode).toBe(401);
     const sms = await app.inject({ method: "POST", url: "/admin/sms", headers: { authorization: `Bearer ${env.ADMIN_API_TOKEN}` }, payload: { to: "+15555550100", body: "x" } });
     expect(sms.statusCode).toBe(503); // no SMS provider configured: never pretends to send
+  });
+
+  it("admits a new NGO group automatically, taking the NGO address from the chain, and refuses unknown groups", async () => {
+    const r = await send("ngoB", d.semaphore, semaphoreAbi, "createGroup", []);
+    const ev = r.logs.map((l) => { try { return decodeEventLog({ abi: semaphoreAbi, data: l.data, topics: l.topics }); } catch { return null; } }).find((e) => e?.eventName === "GroupCreated");
+    const gid = (ev!.args as unknown as { groupId: bigint }).groupId;
+    expect(await pub.readContract({ address: d.registry, abi: registryAbi, functionName: "isNgoGroup", args: [gid] })).toBe(false);
+    const a = await app.inject({ method: "POST", url: "/api/groups/admit", payload: { groupId: gid.toString() } });
+    expect(a.statusCode).toBe(200);
+    expect(a.json().status).toBe("admitted");
+    expect((a.json().ngo as string).toLowerCase()).toBe(acct("ngoB").address.toLowerCase());
+    expect(await pub.readContract({ address: d.registry, abi: registryAbi, functionName: "isNgoGroup", args: [gid] })).toBe(true);
+    expect((await app.inject({ method: "POST", url: "/api/groups/admit", payload: { groupId: gid.toString() } })).json().status).toBe("already-admitted");
+    expect((await app.inject({ method: "POST", url: "/api/groups/admit", payload: { groupId: "999999" } })).statusCode).toBe(404);
+    expect((await app.inject({ method: "POST", url: "/api/groups/admit", payload: { groupId: "abc" } })).statusCode).toBe(400);
   });
 });

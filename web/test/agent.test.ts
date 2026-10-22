@@ -9,8 +9,8 @@ import { agent } from "../src/pages/agent";
 import { wallet } from "../src/wallet";
 import { ADDR, CFG, flush, root, stubFetch } from "./pagehelpers";
 
-const setup = async (groups: unknown[] = []) => {
-  stubFetch({ "/api/groups": groups });
+const setup = async (groups: unknown[] = [], admit: unknown = [503, { error: "off" }]) => {
+  stubFetch({ "/api/groups/admit": admit, "/api/groups": groups });
   const r = root();
   agent(r, CFG());
   await flush();
@@ -73,5 +73,13 @@ describe("agent page", () => {
     expect(q("#reg").textContent).toMatch(/register-group 7 0x/);
     const ok = await setup([{ groupId: "7" }]);
     expect(ok.q("#reg").textContent).toMatch(/admitted to the shared registry/);
+  });
+
+  it("admits the group automatically when the server allows it, and does not offer to create a second group", async () => {
+    localStorage.setItem("ff.myGroup", JSON.stringify("8"));
+    const { q } = await setup([{ groupId: "1" }], { status: "admitted", txHash: "0xabc" });
+    expect(q("#reg").textContent).toMatch(/admitted to the shared registry automatically/);
+    expect(q("#reg").textContent).not.toMatch(/register-group/);
+    expect(q<HTMLButtonElement>("#mk").disabled).toBe(true);
   });
 });
