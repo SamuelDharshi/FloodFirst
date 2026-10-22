@@ -1,0 +1,12 @@
+.git
+.env
+.env.*
+**/node_modules
+**/dist
+contracts
+docs
+services/data
+services/test/.tmp
+web/.vercel
+web/test
+**/*.sqlite*

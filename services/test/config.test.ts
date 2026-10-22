@@ -49,4 +49,10 @@ describe("config module", () => {
     expect(ADDR(9)).toMatch(/^0x[0-9a-f]{40}$/);
     expect(loadEnv).toBeTypeOf("function");
   });
+
+  it("uses the hosting platform's PORT when API_PORT is not set, and prefers API_PORT when both are", () => {
+    expect(testEnv({ PORT: "10000" }).API_PORT).toBe(10000);
+    expect(testEnv({ PORT: "10000", API_PORT: "3001" }).API_PORT).toBe(3001);
+    expect(testEnv({}).API_PORT).toBe(8787);
+  });
 });

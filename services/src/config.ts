@@ -80,7 +80,9 @@ export function loadEnvFile(): void {
 /** Parse environment (does not require deployment). */
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   // Treat empty strings (unfilled .env lines) as unset.
-  const cleaned = Object.fromEntries(Object.entries(source).filter(([, v]) => v !== undefined && v !== ""));
+  const cleaned: Record<string, string | undefined> = Object.fromEntries(Object.entries(source).filter(([, v]) => v !== undefined && v !== ""));
+  // Hosting platforms (Render, Heroku, ...) tell the server which port to use through PORT.
+  if (!cleaned.API_PORT && cleaned.PORT) cleaned.API_PORT = cleaned.PORT;
   return schema.parse(cleaned);
 }
 
