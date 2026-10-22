@@ -55,4 +55,27 @@ describe("config module", () => {
     expect(testEnv({ PORT: "10000", API_PORT: "3001" }).API_PORT).toBe(3001);
     expect(testEnv({}).API_PORT).toBe(8787);
   });
+
+  it("accepts a private key pasted without 0x or with spaces and quotes, but still rejects malformed ones", () => {
+    const k = "47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a";
+    expect(testEnv({ RELAYER_PRIVATE_KEY: k }).RELAYER_PRIVATE_KEY).toBe("0x" + k);
+    expect(testEnv({ RELAYER_PRIVATE_KEY: `  "0x${k}"  ` }).RELAYER_PRIVATE_KEY).toBe("0x" + k);
+    expect(testEnv({ RELAYER_PRIVATE_KEY: k + "\n" }).RELAYER_PRIVATE_KEY).toBe("0x" + k);
+    expect(() => testEnv({ RELAYER_PRIVATE_KEY: "0x301ea090e957c28ca536ab8679EBEF2D354Febd8" })).toThrow(); // an address is not a key
+    expect(() => testEnv({ RELAYER_PRIVATE_KEY: k.slice(0, 60) })).toThrow();
+  });
+
+  it("explains a bad private key without ever echoing its value", () => {
+    const bad = "super-secret-but-wrong-value";
+    try {
+      testEnv({ RELAYER_PRIVATE_KEY: bad });
+      throw new Error("should have thrown");
+    } catch (e) {
+      const msg = String((e as Error).message);
+      expect(msg).toContain("RELAYER_PRIVATE_KEY");
+      expect(msg).toMatch(/0x followed by 64 hexadecimal characters/);
+      expect(msg).not.toContain(bad);
+    }
+  });
 });
+

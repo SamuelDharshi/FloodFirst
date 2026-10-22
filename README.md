@@ -9,7 +9,7 @@
 | Network | Base Sepolia (chain id 84532) |
 | Live site (landing page only) | https://floodfirst.vercel.app |
 | Source | https://github.com/SamuelDharshi/FloodFirst |
-| Tests | 206 automated tests (59 contracts, 70 services, 77 web) |
+| Tests | 209 automated tests (59 contracts, 73 services, 77 web) |
 
 ---
 
@@ -518,7 +518,7 @@ Node 22, TypeScript, Fastify, viem, SQLite (`node:sqlite`). It serves the built 
 ```bash
 node test-all.mjs        # everything below + type checks + web build
 cd contracts && forge test                     # 59 tests: unit, fuzz, invariants, real Semaphore proofs
-cd services  && npx vitest run                 # 70 tests, incl. an end-to-end run on a local anvil chain
+cd services  && npx vitest run                 # 73 tests, incl. an end-to-end run on a local anvil chain
 cd web       && npx vitest run                 # 77 tests (jsdom)
 ```
 

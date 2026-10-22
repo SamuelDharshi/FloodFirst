@@ -5,9 +5,9 @@ import type { Address, Hex } from "viem";
 
 const root = resolve(import.meta.dirname, "../..");
 
-const hex = (len: number) => z.string().regex(new RegExp(`^0x[0-9a-fA-F]{${len}}$`));
+const hex = (len: number, what = "value") => z.string().regex(new RegExp(`^0x[0-9a-fA-F]{${len}}$`), `${what} must be 0x followed by ${len} hexadecimal characters`);
 const address = hex(40).transform((v) => v as Address);
-const privateKey = hex(64).transform((v) => v as Hex);
+const privateKey = hex(64, "a private key (32 bytes)").transform((v) => v as Hex);
 
 const schema = z.object({
   EXPECTED_CHAIN_ID: z.coerce.number().int().positive(),
@@ -81,6 +81,14 @@ export function loadEnvFile(): void {
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   // Treat empty strings (unfilled .env lines) as unset.
   const cleaned: Record<string, string | undefined> = Object.fromEntries(Object.entries(source).filter(([, v]) => v !== undefined && v !== ""));
+  // Values pasted into a hosting dashboard often carry stray spaces, newlines or quotes. Clean them up, and add the
+  // "0x" prefix to a bare 64-character hex private key. (Malformed values are still rejected, and never echoed.)
+  for (const [k, v] of Object.entries(cleaned)) {
+    if (typeof v !== "string") continue;
+    let t = v.trim().replace(/^(["'])(.*)\1$/s, "$2").trim();
+    if (k.endsWith("_PRIVATE_KEY") && /^[0-9a-fA-F]{64}$/.test(t)) t = "0x" + t;
+    cleaned[k] = t;
+  }
   // Hosting platforms (Render, Heroku, ...) tell the server which port to use through PORT.
   if (!cleaned.API_PORT && cleaned.PORT) cleaned.API_PORT = cleaned.PORT;
   return schema.parse(cleaned);
