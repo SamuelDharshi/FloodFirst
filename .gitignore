@@ -1,0 +1,26 @@
+.env
+node_modules/
+data/
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+dist/
+services/test/.tmp/
+web/.env.local
+*.sqlite*
+
+# third-party / generated / local-only
+contracts/lib/
+**/dist/
+**/coverage/
+**/*.tsbuildinfo
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.env.*
+!.env.example
+web/.env.local
+deployments/tmp_check/
+*.timestamp-*.mjs
