@@ -111,8 +111,14 @@ export function claim(root: HTMLElement, cfg: AppConfig | null): void {
         message: proof.message.toString(), scope: proof.scope.toString(), points: proof.points.map((p) => String(p)) } };
       const r = await postJson<{ status?: string; error?: string; txHash?: string }>("/api/claim", body);
       if (r.status !== 200 || r.data.status !== "confirmed") {
-        const why = r.data.error === "NullifierAlreadyUsed" ? "This household has already claimed for this event (through this or another NGO)."
-          : r.data.error === "EventNotOpen" ? "This event is no longer open for claims." : (r.data.error ?? `HTTP ${r.status}`);
+        const known: Record<string, string> = {
+          NullifierAlreadyUsed: "This household has already claimed for this event (through this or another NGO).",
+          EventNotOpen: "This event is no longer open for claims.",
+          EventIsExpired: "This event has expired, so claims are closed.",
+          TrancheExhausted: "This event's money is fully claimed. It pays one fixed amount per household that was enrolled when it triggered, and every one of those claims is already taken. Enrol households before a trigger; this card can claim in the next event.",
+          GroupNotRegistered: "This card's NGO group is not admitted to the registry yet.",
+        };
+        const why = (r.data.error && known[r.data.error]) || r.data.error || `HTTP ${r.status}`;
         throw new Error(why);
       }
       const v = await postJson<SignedVoucher & { error?: string }>("/api/voucher", { voucherSecret: secret });
