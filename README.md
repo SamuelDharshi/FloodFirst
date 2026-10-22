@@ -2,8 +2,6 @@
 
 **Anticipatory flood cash, on a public testnet, with a shared registry that stops two NGOs paying the same household and never makes either of them share a list.**
 
-> **Testnet only. No independent security audit. Tokens have no value.** Built for the *Web3 for Social Good Hackathon 2026* (SMU SCIS, GSR Foundation, University of Málaga, DoraHacks). Product spec: [FloodFirst-PRD.md](FloodFirst-PRD.md). Design critique of one of the building blocks we rely on: [FEEDBACK.md](FEEDBACK.md).
-
 | | |
 | --- | --- |
 | Network | Base Sepolia (chain id 84532) |
