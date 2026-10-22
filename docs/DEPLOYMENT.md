@@ -47,3 +47,24 @@ Docker: `docker build -f services/Dockerfile -t floodfirst-api .` (not tested in
 
 ## Rollback / recovery
 See [OPERATIONS.md](OPERATIONS.md). Contracts are not upgradeable: a bad deployment is replaced by a new deployment and a new `deployments/<chainId>.json`; the old pool can be left to expire.
+
+## Render (free tier): API + web app
+
+`render.yaml` (Blueprint) and the root `Dockerfile` run the API, the indexer and the built web app as **one** service. The container build was **not** run here (no Docker on the dev machine); instead the runtime was simulated: a clean `npm ci --omit=dev` plus `tsx`, started with only `PORT` and the secrets, served `/api/health`, the web page and `/api/config` with the right CORS header.
+
+1. Push this repository to GitHub (done: SamuelDharshi/FloodFirst).
+2. In the Render dashboard: **New -> Blueprint**, connect GitHub, pick the repo. Render reads `render.yaml`.
+3. Enter the secrets when prompted (they are never stored in git):
+   - `RELAYER_PRIVATE_KEY` (a throwaway key with a little Base Sepolia ETH)
+   - `VOUCHER_SIGNER_PRIVATE_KEY` (a throwaway key; **the same key whose address you used when deploying**, otherwise merchants will see "not from the voucher signer")
+   - `ADMIN_API_TOKEN` (24+ random characters)
+   - optional: the three attester keys, only to run the trigger from the server
+   - **Do not add the deployer/owner key.** The server does not need it.
+4. Deploy. Render builds the image and gives you a URL like `https://floodfirst-api.onrender.com`. Open it: that is the full app.
+5. To use it from the Vercel site as well: in Vercel set `VITE_API_URL=https://floodfirst-api.onrender.com` (Project -> Settings -> Environment Variables) and redeploy; `CORS_ORIGINS` in `render.yaml` already allows `https://floodfirst.vercel.app`.
+
+**Free-tier limits you must know:**
+- The service **sleeps after about 15 minutes without traffic**; the first request afterwards takes about a minute to wake it.
+- The free plan has **no persistent disk**. SQLite lives in `/tmp`, so on every restart the event index is **rebuilt from the chain** (a few minutes of `eth_getLogs` calls; nothing is lost on chain), but the **public oracle log, operator gauge readings and idempotency records are lost**. A paid instance with a disk (or a hosted database) removes this.
+- Keep the **owner key off the server**; run admin commands (`register-group`, `set-thresholds`, `mint`) from your own machine with `npm run cli`.
+

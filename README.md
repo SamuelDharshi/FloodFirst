@@ -532,7 +532,7 @@ cd web       && npx vitest run                 # 77 tests (jsdom)
 
 - **Testnet:** `npm run preflight && npm run deploy && npm run verify-deployment`. The script refuses mainnets. Addresses and transaction hashes: [docs/DEPLOYMENTS.md](docs/DEPLOYMENTS.md). Runbook: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 - **Web only (Vercel):** `cd web && vercel deploy --prod`. This serves the landing page. The app pages need the API, which keeps a database and a background indexer, so it must run on a normal server host. Point the site at it by setting `VITE_API_URL` at build time.
-- **API:** `docker build -f services/Dockerfile -t floodfirst-api .` (not built in this environment).
+- **API + web app on Render (free tier):** `render.yaml` is a ready Blueprint and the root `Dockerfile` builds both. Steps and free-tier limits: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md#render-free-tier-api--web-app).
 - Operations, backups and incidents: [docs/OPERATIONS.md](docs/OPERATIONS.md).
 
 ---
