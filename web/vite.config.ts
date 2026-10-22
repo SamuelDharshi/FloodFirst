@@ -25,7 +25,7 @@ export default defineConfig({
       workbox: { globPatterns: ["**/*.{js,css,html,svg,wasm,jpg,png,webp,woff2}"], maximumFileSizeToCacheInBytes: 8 * 1024 * 1024, navigateFallback: "/index.html" },
     }),
   ],
-  server: { port: 3000, strictPort: true, host: true, proxy: { "/api": "http://localhost:8787", "/admin": "http://localhost:8787" } },
+  server: { port: 3000, strictPort: true, host: true, proxy: { "/api": "http://localhost:3001", "/admin": "http://localhost:3001" } },
   preview: { port: 3000, strictPort: true, host: true },
   build: { target: "es2022", chunkSizeWarningLimit: 4000 },
   test: { environment: "node" },
