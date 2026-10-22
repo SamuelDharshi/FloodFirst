@@ -24,3 +24,5 @@ Thumbs.db
 web/.env.local
 deployments/tmp_check/
 *.timestamp-*.mjs
+
+.vercel
