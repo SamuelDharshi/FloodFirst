@@ -1,0 +1,76 @@
+'forge clean' running (wd: D:\floodfirst\contracts)
+'forge config --json' running
+'forge build --build-info --deny never --skip ./test/** ./script/** --force' running (wd: D:\floodfirst\contracts)
+INFO:Detectors:
+Detector: incorrect-equality
+Pool.release(uint256) (src/Pool.sol#100-120) uses a dangerous strict equality:
+	- claimAmount == 0 (src/Pool.sol#111)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+INFO:Detectors:
+Detector: missing-zero-check
+TriggerOracle.constructor(address,IPool,bytes32,address,address,address,address).fallbackAttester_ (src/TriggerOracle.sol#81-82) lacks a zero-check on :
+		- fallbackAttester = fallbackAttester_ (src/TriggerOracle.sol#90)
+TriggerOracle.constructor(address,IPool,bytes32,address,address,address,address).reporter_ (src/TriggerOracle.sol#82-83) lacks a zero-check on :
+		- reporter = reporter_ (src/TriggerOracle.sol#91)
+TriggerOracle.setConfig(address,address,address,address).fb (src/TriggerOracle.sol#94) lacks a zero-check on :
+		- fallbackAttester = fb (src/TriggerOracle.sol#98)
+TriggerOracle.setConfig(address,address,address,address).rep (src/TriggerOracle.sol#94) lacks a zero-check on :
+		- reporter = rep (src/TriggerOracle.sol#98-99)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+INFO:Detectors:
+Detector: calls-loop
+NullifierRegistry.totalEnrolled() (src/NullifierRegistry.sol#66-70) has external calls inside a loop: total += ISemaphoreGroupSize(address(semaphore)).getMerkleTreeSize(groups[i]) (src/NullifierRegistry.sol#68-70)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+INFO:Detectors:
+Detector: reentrancy-events
+Reentrancy in TriggerOracle._execute(uint256) (src/TriggerOracle.sol#154-160):
+	External calls:
+	- tranche = pool.release(eventId) (src/TriggerOracle.sol#157)
+	Event emitted after the call(s):
+	- Triggered(eventId,tranche) (src/TriggerOracle.sol#160)
+Reentrancy in NullifierRegistry.claim(uint256,uint256,ISemaphore.SemaphoreProof) (src/NullifierRegistry.sol#75-86):
+	External calls:
+	- issuer.registerClaim(eventId,proof.message) (src/NullifierRegistry.sol#83-84)
+	Event emitted after the call(s):
+	- Claimed(eventId,groupId,proof.nullifier,proof.message) (src/NullifierRegistry.sol#85-86)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+INFO:Detectors:
+Detector: timestamp
+Pool.release(uint256) (src/Pool.sol#100-120) uses timestamp for comparisons
+	Dangerous comparisons:
+	- lastRelease != 0 && block.timestamp < uint256(lastRelease) + minReleaseInterval (src/Pool.sol#104)
+TriggerOracle.trigger(TriggerOracle.Reading,bytes,TriggerOracle.Reading,bytes) (src/TriggerOracle.sol#116-139) uses timestamp for comparisons
+	Dangerous comparisons:
+	- triggers[eventId].status != Status.None (src/TriggerOracle.sol#123-124)
+TriggerOracle.execute(uint256) (src/TriggerOracle.sol#140-147) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < t.executeAfter (src/TriggerOracle.sol#145-146)
+TriggerOracle._checkFresh(uint64) (src/TriggerOracle.sol#160-166) uses timestamp for comparisons
+	Dangerous comparisons:
+	- observedAt > block.timestamp || block.timestamp - observedAt > maxReadingAge (src/TriggerOracle.sol#162-163)
+VoucherIssuer.isOpen(uint256) (src/VoucherIssuer.sol#78-81) uses timestamp for comparisons
+	Dangerous comparisons:
+	- e.expiry != 0 && ! e.expired && block.timestamp <= e.expiry (src/VoucherIssuer.sol#80)
+VoucherIssuer.registerClaim(uint256,uint256) (src/VoucherIssuer.sol#90-100) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp > e.expiry (src/VoucherIssuer.sol#94)
+VoucherIssuer.redeem(bytes32,address) (src/VoucherIssuer.sol#103-114) uses timestamp for comparisons
+	Dangerous comparisons:
+	- e.expired || block.timestamp > e.expiry (src/VoucherIssuer.sol#109)
+VoucherIssuer.expire(uint256) (src/VoucherIssuer.sol#117-126) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp <= e.expiry (src/VoucherIssuer.sol#121)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+INFO:Detectors:
+Detector: missing-inheritance
+NullifierRegistry (src/NullifierRegistry.sol#19-86) should inherit from INullifierRegistry (src/interfaces/IFloodFirst.sol#14-16)
+Pool (src/Pool.sol#13-121) should inherit from IPool (src/interfaces/IFloodFirst.sol#10-12)
+VoucherIssuer (src/VoucherIssuer.sol#14-127) should inherit from IVoucherIssuer (src/interfaces/IFloodFirst.sol#4-8)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-inheritance
+INFO:Detectors:
+Detector: unindexed-event-address
+Event Pool.OracleSet(address) (src/Pool.sol#36) has address parameters but no indexed parameters
+Event Pool.RegistrySet(address) (src/Pool.sol#37) has address parameters but no indexed parameters
+Event TriggerOracle.ConfigSet(address,address,address,address) (src/TriggerOracle.sol#61-62) has address parameters but no indexed parameters
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unindexed-event-address-parameters
+INFO:Slither:. analyzed (34 contracts with 102 detectors), 22 result(s) found
