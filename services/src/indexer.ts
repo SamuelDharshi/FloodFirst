@@ -96,18 +96,29 @@ export class Indexer {
     const memberRows: { group: string; idx: number; commitment: string; block: number }[] = [];
     const fetchMembers = async (groups: string[], fromBlock: number, toBlock: number) => {
       if (groups.length === 0) return;
-      for (let s = fromBlock; s <= toBlock; s += this.env.INDEXER_CHUNK) {
-        const e = Math.min(toBlock, s + this.env.INDEXER_CHUNK - 1);
-        const ml = await this.pub.getLogs({
-          address: this.d.semaphore,
-          fromBlock: BigInt(s),
-          toBlock: BigInt(e),
-          // groupId is the only indexed argument shared by every member event; filter by topic OR.
-          events: semaphoreAbi.filter(
-            (x) => x.type === "event" && MEMBER_EVENTS.includes(x.name),
-          ) as never,
-          args: { groupId: groups.map((g) => BigInt(g)) } as never,
-        });
+      const ranges: [number, number][] = [];
+      for (let s = fromBlock; s <= toBlock; s += this.env.INDEXER_CHUNK) ranges.push([s, Math.min(toBlock, s + this.env.INDEXER_CHUNK - 1)]);
+      // A public RPC answers one 200-block request in ~0.5 s, so a long backfill is fetched with a few requests in flight.
+      const results: Log[][] = new Array(ranges.length);
+      let next = 0;
+      const worker = async () => {
+        while (next < ranges.length) {
+          const i = next++;
+          const [lo, hi] = ranges[i]!;
+          results[i] = (await this.pub.getLogs({
+            address: this.d.semaphore,
+            fromBlock: BigInt(lo),
+            toBlock: BigInt(hi),
+            // groupId is the only indexed argument shared by every member event; filter by topic OR.
+            events: semaphoreAbi.filter(
+              (x) => x.type === "event" && MEMBER_EVENTS.includes(x.name),
+            ) as never,
+            args: { groupId: groups.map((g) => BigInt(g)) } as never,
+          })) as unknown as Log[];
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(8, ranges.length) }, worker));
+      for (const ml of results) {
         for (const p of parseEventLogs({ abi: semaphoreAbi, logs: ml })) {
           const a = p.args as Record<string, unknown>;
           const gid = String(a.groupId);
