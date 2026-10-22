@@ -9,7 +9,7 @@
 | Network | Base Sepolia (chain id 84532) |
 | Live site (landing page only) | https://floodfirst.vercel.app |
 | Source | https://github.com/SamuelDharshi/FloodFirst |
-| Tests | 209 automated tests (59 contracts, 73 services, 77 web) |
+| Tests | 210 automated tests (59 contracts, 73 services, 78 web) |
 
 ---
 

@@ -1,7 +1,9 @@
 import { store } from "./util";
 
 /** Same origin by default (the API serves the web app on one port). Set VITE_API_URL to use a separate API host. */
-export const API = (import.meta.env.VITE_API_URL as string | undefined) ?? "";
+/** Trims spaces and trailing slashes so "https://host/" and "https://host" behave the same. */
+export const normalizeBase = (v?: string): string => (v ?? "").trim().replace(/\/+$/, "");
+export const API = normalizeBase(import.meta.env.VITE_API_URL as string | undefined);
 export const EXPLORER = (import.meta.env.VITE_EXPLORER_URL as string | undefined) ?? "https://sepolia.basescan.org";
 
 export interface Deployment {

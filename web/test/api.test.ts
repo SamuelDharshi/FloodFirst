@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getJson, loadConfig, postJson } from "../src/api";
+import { getJson, loadConfig, normalizeBase, postJson } from "../src/api";
 
 const cfg = { chainId: 84532, rpcUrl: "https://rpc", deployment: {}, voucherSigner: "0x" + "1".repeat(40), gaugeMode: "operator", knownLimits: ["a"], labels: {} };
 const ok = (body: unknown, status = 200) => vi.fn(async () => new Response(JSON.stringify(body), { status }));
@@ -48,4 +48,13 @@ describe("api module (fetch is a test double)", () => {
     expect(init.method).toBe("POST");
     expect(init.body).toBe('{"a":1}');
   });
+
+  it("normalises the API base URL: trailing slashes and spaces are removed, empty means same origin", () => {
+    expect(normalizeBase("https://floodfirst-api.onrender.com/")).toBe("https://floodfirst-api.onrender.com");
+    expect(normalizeBase("  https://x.example///  ")).toBe("https://x.example");
+    expect(normalizeBase("https://x.example")).toBe("https://x.example");
+    expect(normalizeBase(undefined)).toBe("");
+    expect(normalizeBase("")).toBe("");
+  });
 });
+
