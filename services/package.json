@@ -1,0 +1,37 @@
+{
+  "name": "floodfirst-services",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "tsx src/main.ts",
+    "abis": "node scripts/export-abis.mjs",
+    "cli": "tsx src/cli.ts",
+    "preflight": "tsx src/preflight.ts",
+    "oracle:once": "tsx src/oracle-once.ts",
+    "deploy": "tsx src/deploy.ts",
+    "verify-deployment": "tsx src/verify-deployment.ts",
+    "test": "vitest run",
+    "check:live": "node scripts/check-live.mjs",
+    "backtest": "tsx src/backtest.ts"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.3.1",
+    "@fastify/rate-limit": "^11.2.1",
+    "@fastify/static": "^10.1.7",
+    "@semaphore-protocol/group": "^4.14.5",
+    "fastify": "^5.12.7",
+    "viem": "^2.57.8",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@semaphore-protocol/identity": "^4.14.5",
+    "@semaphore-protocol/proof": "^4.14.5",
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^2.1.9"
+  }
+}
